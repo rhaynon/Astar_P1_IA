@@ -86,4 +86,67 @@ class Grafo: #Grafo para organização dos lugares
   
 grafo = Grafo()
     
+import numpy as np
+class VetorOrdenado: #Utilizando vetor ordenado para armazenar as cidades adjacente
+  
+  def __init__(self, capacidade):
+    self.capacidade = capacidade
+    self.ultima_posicao = -1
+    self.valores = np.empty(self.capacidade, dtype=object) # Mudança no tipo de dados, armazenando objetos
 
+  # Referência para o vértice e comparação com a distância para o objetivo
+  def insere(self, adjacente):
+    if self.ultima_posicao == self.capacidade - 1:
+      print('Capacidade máxima atingida')
+      return
+    posicao = 0
+    for i in range(self.ultima_posicao + 1): #Percorre o vetor
+      posicao = i
+      if self.valores[i].distanciaAestrela > adjacente.distanciaAestrela: #Posição encontrada
+        break
+      if i == self.ultima_posicao: #Caso de atualizar ultima posição
+        posicao = i + 1
+    x = self.ultima_posicao
+    while x >= posicao: #Faz o caminho da volta para inserir valores
+      self.valores[x + 1] = self.valores[x] #Desloca valores
+      x -= 1
+    self.valores[posicao] = adjacente
+    self.ultima_posicao += 1
+
+  def imprime(self): #Função para imprimir resultado
+    if self.ultima_posicao == -1:
+      print('O vetor está vazio')
+    else:
+      for i in range(self.ultima_posicao + 1):
+        print(i, ' - ', self.valores[i].vertice.nome, ' : ', 
+              self.valores[i].custo, "Custo", ' - ', 
+              self.valores[i].vertice.distanciaObjetivo,"Distância para o objetivo", ' - ',
+              self.valores[i].distanciaAestrela, "Distância estrela")
+
+class AEstrela: #Implementação do A estrela
+  
+  def __init__(self, objetivo): #Objetivo inicializado como falso
+    self.objetivo = objetivo
+    self.encontrado = False
+
+  def buscar(self, atual): #Testa se o vértice atual é objetivo
+    print('------------------')
+    print('Atual: {}'.format(atual.nome))
+    atual.visitado = True #Marca o atual como visitado
+
+    if atual == self.objetivo:
+      self.encontrado = True
+    else:
+      vetor_ordenado = VetorOrdenado(len(atual.adjacentes)) #Cria-se um vetor
+      for adjacente in atual.adjacentes: #Percorre a lista dos adjacentes ao vértice atual
+        if adjacente.vertice.visitado == False: #Se o vértice atual não foi visitado
+          adjacente.vertice.visitado = True #Agora é dado como visitado
+          vetor_ordenado.insere(adjacente) #Inserido como vizinho 
+      vetor_ordenado.imprime()
+
+      if vetor_ordenado.valores[0] != None: #Se existir algo no indície 0
+        self.buscar(vetor_ordenado.valores[0].vertice) #Busca sera feita novamente no indície 0, sendo um dos lugares da UFMA
+
+busca_aestrela = AEstrela(grafo.bict) #Destino
+
+busca_aestrela.buscar(grafo.entradaUfma) #Local de origem
